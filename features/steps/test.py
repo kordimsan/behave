@@ -3,17 +3,29 @@ from behave import *
 from pywinauto import application, findwindows, keyboard, element_info
 import time
 
+class TextNotFound(Exception):
+    pass
+
 #Откроем главную страницу. Передадим в качестве аргумента адрес страницы.
 @given('Запущена программа "{app_name}"')
 def step(context, app_name):
     context.app = application.Application()
-    context.app.start(r"notepad.exe")
+    context.app.start(app_name)
 
 #Теперь пишем текст
 @then("Пишем текст '{text}'")
 def step(context, text):
     context.app['Notepad'].wait('ready')
-    context.app['Notepad']['Edit'].set_edit_text("blablabla")
+    context.app['Notepad']['Edit'].set_edit_text(text)
+
+#Проверка написанного текста
+@then("Проверка текста '{text}'")
+def step(context, text):
+    texts = context.app['Notepad']['Edit'].texts()
+    if len(texts) == 0:
+        raise TextNotFound(f'Текст: {text} не найден')
+    if not context.app['Notepad']['Edit'].texts()[0] == text:
+        raise TextNotFound(f'Текст: {text} не найден')
 
 #Теперь нажмем на кнопку "Выход" в меню
 @then("Выход из файла '{text}'")
